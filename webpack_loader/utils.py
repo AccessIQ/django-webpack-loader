@@ -1,6 +1,7 @@
 from django.conf import settings
+from django.utils.module_loading import import_string
 
-from .loader import WebpackLoader
+from .config import load_config
 
 
 _loaders = {}
@@ -8,7 +9,11 @@ _loaders = {}
 
 def get_loader(config_name):
     if config_name not in _loaders:
-        _loaders[config_name] = WebpackLoader(config_name)
+        config = load_config(config_name)
+        LoaderClass = config['LOADER_CLASS']
+        if not callable(LoaderClass):
+            LoaderClass = import_string(LoaderClass)
+        _loaders[config_name] = LoaderClass(config_name, config)
     return _loaders[config_name]
 
 
